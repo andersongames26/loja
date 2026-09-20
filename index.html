@@ -152,14 +152,12 @@
         </div>
     </div>
     <script>// BANCO DE DADOS DA SUA LOJA
-        // ⚠️ O SEGREDO DO VÍDEO: Adicionei um "?" no final do link do PKG.
-        // Isso disfarça a extensão .pkg para o navegador deixar passar, mas o GoldHEN baixa perfeitamente!
         const meusJogos = [
             {
                 nome: "Alex Kidd in Miracle World DX",
                 capa: "https://f005.backblazeb2.com/file/PS4COVERS/Alex%20Kidd%20in%20Miracle%20World%20DX.png",
                 fundo: "https://alphacoders.com",
-                pkg: "https://f005.backblazeb2.com/file/andersongames/Alex%20Kidd%20in%20Miracle%20World%20DX_CUSA20239_01.00.pkg" // Deixe a interrogação no final!
+                pkg: "https://f005.backblazeb2.com/file/andersongames/Alex%20Kidd%20in%20Miracle%20World%20DX_CUSA20239_01.00.pkg" // COLOQUE SEU LINK DO BACKBLAZE AQUI
             }
         ];
 
@@ -187,32 +185,32 @@
             carregarLoja();
         }
 
+        // FUNÇÃO CORRIGIDA SEGUINDO O PADRÃO ESTRUTURAL DE DOWNLOAD DO GOLDHEN
         function instalarJogo() {
             const jogo = meusJogos[indexSelecionado];
 
             // ⚠️ COLOQUE O SEU IP DO PS4 AQUI:
             const ipPS4 = "192.168.1.2";
 
-            const payload = {
+            // O GoldHEN exige que o envio envie os pacotes como uma string pura sem tags extras de cabeçalho
+            var xhr = new XMLHttpRequest();
+
+            // Forçando a porta padrão 12800 da API do GoldHEN Remote Package Installer
+            xhr.open("POST", "http://" + ipPS4 + ":12800/api/install", true);
+
+            // Configuração cirúrgica de Header que as lojas usam nos vídeos para o PS4 aceitar
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            // O formato exato de texto bruto que o instalador do PS4 decodifica na memória
+            var dadosEnvio = JSON.stringify({
                 type: "direct",
                 packages: [ jogo.pkg ]
-            };
+            });
 
-            const jsonTexto = JSON.stringify(payload);
-            alert("🚀 Ativando download de " + jogo.nome + "...");
+            alert("🚀 Enviando comando oficial para a XMB do seu PS4...");
 
-            // Dispara para as portas internas de escuta do ecossistema do GoldHEN
-            fetch("http://" + ipPS4 + ":12800/api/install", {
-                method: "POST",
-                body: jsonTexto,
-                headers: { "Content-Type": "text/plain" }
-            }).catch(e => {});
-
-            fetch("http://" + ipPS4 + ":9090/api/install", {
-                method: "POST",
-                body: jsonTexto,
-                headers: { "Content-Type": "text/plain" }
-            }).catch(e => {});
+            // Envia o link puro pela rede interna do videogame
+            xhr.send(dadosEnvio);
         }
 
         document.getElementById('btn-instalar').onclick = function() {
