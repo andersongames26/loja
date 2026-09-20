@@ -151,7 +151,7 @@
             <button class="botao-instalar" id="btn-instalar">Instalar via PKG</button>
         </div>
     </div>
-    <script>// BANCO DE DADOS DA SUA LOJA
+    <script>// BANCO DE DADOS INTERNO DA SUA LOJA
         const meusJogos = [
             {
                 nome: "Alex Kidd in Miracle World DX",
@@ -170,7 +170,7 @@
             meusJogos.forEach((jogo, i) => {
                 const item = document.createElement('div');
                 item.className = `item-jogo ${i === indexSelecionado ? 'selecionado' : ''}`;
-                item.innerText = jogo.nome;
+                item.innerText = juego.nome;
 
                 item.onclick = function() { mudarSelecao(i); };
                 listaDiv.appendChild(item);
@@ -185,39 +185,49 @@
             carregarLoja();
         }
 
-        // FUNÇÃO CORRIGIDA SEGUINDO O PADRÃO ESTRUTURAL DE DOWNLOAD DO GOLDHEN
+        // FUNÇÃO QUE ACIONA O INJETOR NATIVO DO CONSOLE
         function instalarJogo() {
             const jogo = meusJogos[indexSelecionado];
+            alert("🚀 Ativando privilégios e enviando " + jogo.nome + " para a XMB...");
 
-            // ⚠️ COLOQUE O SEU IP DO PS4 AQUI:
-            const ipPS4 = "192.168.1.2";
+            try {
+                // Tática 1: Se estiver rodando dentro do Host/Jailbreak ativo, usa o atalho WebKit injetado pelo GoldHEN
+                if (window.orbis && window.orbis.download) {
+                    window.orbis.download(jogo.pkg, jogo.nome);
+                    return;
+                }
 
-            // O GoldHEN exige que o envio envie os pacotes como uma string pura sem tags extras de cabeçalho
-            var xhr = new XMLHttpRequest();
+                if (window.GoldHEN && window.GoldHEN.installPkg) {
+                    window.GoldHEN.installPkg(jogo.pkg);
+                    return;
+                }
 
-            // Forçando a porta padrão 12800 da API do GoldHEN Remote Package Installer
-            xhr.open("POST", "http://" + ipPS4 + ":12800/api/install", true);
+                // Tática 2: Envio em formato brutoforce direto para as APIs de escuta de rede interna
+                const ipPS4 = "192.168.1.2"; // SUBSTITUA PELO IP REAL DO SEU PS4 AQUI
+                const payload = JSON.stringify({ type: "direct", packages: [ jogo.pkg ] });
 
-            // Configuração cirúrgica de Header que as lojas usam nos vídeos para o PS4 aceitar
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                // Método 1: Chamada Ajax crua mimetizando o aplicativo de privilégios do PS4
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "http://" + ipPS4 + ":12800/api/install", true);
+                xhr.setRequestHeader("Content-Type", "text/plain");
+                xhr.send(payload);
 
-            // O formato exato de texto bruto que o instalador do PS4 decodifica na memória
-            var dadosEnvio = JSON.stringify({
-                type: "direct",
-                packages: [ jogo.pkg ]
-            });
+                // Método 2: Segunda tentativa na porta alternativa do Payload Server
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open("POST", "http://" + ipPS4 + ":9090/api/install", true);
+                xhr2.setRequestHeader("Content-Type", "text/plain");
+                xhr2.send(payload);
 
-            alert("🚀 Enviando comando oficial para a XMB do seu PS4...");
-
-            // Envia o link puro pela rede interna do videogame
-            xhr.send(dadosEnvio);
+            } catch (e) {
+                console.log("Erro de injeção: " + e.message);
+            }
         }
 
         document.getElementById('btn-instalar').onclick = function() {
             instalarJogo();
         };
 
-        // SUPORTE PARA AS SETAS DO CONTROLE
+        // SUPORTE PARA AS SETAS DO CONTROLE DO PS4
         window.addEventListener('keydown', function(event) {
             switch(event.key) {
                 case 'ArrowUp':
