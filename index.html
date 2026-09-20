@@ -151,13 +151,14 @@
             <button class="botao-instalar" id="btn-instalar">Instalar via PKG</button>
         </div>
     </div>
-    <script>// BANCO DE DADOS INTERNO DA SUA LOJA
+    <script>// BANCO DE DADOS DA SUA LOJA
+        // ⚠️ COLOQUE SEUS LINKS REAIS DO BACKBLAZE B2 NAS ASPAS ABAIXO:
         const meusJogos = [
             {
                 nome: "Alex Kidd in Miracle World DX",
                 capa: "https://f005.backblazeb2.com/file/PS4COVERS/Alex%20Kidd%20in%20Miracle%20World%20DX.png",
                 fundo: "https://alphacoders.com",
-                pkg: "https://f005.backblazeb2.com/file/andersongames/Alex%20Kidd%20in%20Miracle%20World%20DX_CUSA20239_01.00.pkg" // COLOQUE SEU LINK DO BACKBLAZE AQUI
+                pkg: "https://f005.backblazeb2.com/file/andersongames/Alex%20Kidd%20in%20Miracle%20World%20DX_CUSA20239_01.00.pkg"
             }
         ];
 
@@ -170,12 +171,13 @@
             meusJogos.forEach((jogo, i) => {
                 const item = document.createElement('div');
                 item.className = `item-jogo ${i === indexSelecionado ? 'selecionado' : ''}`;
-                item.innerText = juego.nome;
+                item.innerText = jogo.nome; // Corrigido de 'juego' para 'jogo' para não travar
 
                 item.onclick = function() { mudarSelecao(i); };
                 listaDiv.appendChild(item);
             });
 
+            // Atualiza a capa e o plano de fundo dinamicamente na tela
             document.getElementById('capa-exibida').src = meusJogos[indexSelecionado].capa;
             document.body.style.backgroundImage = "url('" + meusJogos[indexSelecionado].fundo + "')";
         }
@@ -185,49 +187,26 @@
             carregarLoja();
         }
 
-        // FUNÇÃO QUE ACIONA O INJETOR NATIVO DO CONSOLE
+        // FUNÇÃO DE DOWNLOAD IMEDIATO (Mesmo sistema automático da PKG-Zone)
         function instalarJogo() {
             const jogo = meusJogos[indexSelecionado];
-            alert("🚀 Ativando privilégios e enviando " + jogo.nome + " para a XMB...");
 
-            try {
-                // Tática 1: Se estiver rodando dentro do Host/Jailbreak ativo, usa o atalho WebKit injetado pelo GoldHEN
-                if (window.orbis && window.orbis.download) {
-                    window.orbis.download(jogo.pkg, jogo.nome);
-                    return;
-                }
+            // Cria um link temporário invisível para forçar a comportar de download imediato
+            const linkTemporario = document.createElement('a');
+            linkTemporario.href = jogo.pkg;
+            linkTemporario.setAttribute('download', jogo.nome + '.pkg');
 
-                if (window.GoldHEN && window.GoldHEN.installPkg) {
-                    window.GoldHEN.installPkg(jogo.pkg);
-                    return;
-                }
-
-                // Tática 2: Envio em formato brutoforce direto para as APIs de escuta de rede interna
-                const ipPS4 = "192.168.1.2"; // SUBSTITUA PELO IP REAL DO SEU PS4 AQUI
-                const payload = JSON.stringify({ type: "direct", packages: [ jogo.pkg ] });
-
-                // Método 1: Chamada Ajax crua mimetizando o aplicativo de privilégios do PS4
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", "http://" + ipPS4 + ":12800/api/install", true);
-                xhr.setRequestHeader("Content-Type", "text/plain");
-                xhr.send(payload);
-
-                // Método 2: Segunda tentativa na porta alternativa do Payload Server
-                var xhr2 = new XMLHttpRequest();
-                xhr2.open("POST", "http://" + ipPS4 + ":9090/api/install", true);
-                xhr2.setRequestHeader("Content-Type", "text/plain");
-                xhr2.send(payload);
-
-            } catch (e) {
-                console.log("Erro de injeção: " + e.message);
-            }
+            linkTemporario.style.display = 'none';
+            document.body.appendChild(linkTemporario);
+            linkTemporario.click();
+            document.body.removeChild(linkTemporario);
         }
 
         document.getElementById('btn-instalar').onclick = function() {
             instalarJogo();
         };
 
-        // SUPORTE PARA AS SETAS DO CONTROLE DO PS4
+        // SUPORTE PARA CONTROLE DO PS4 / TECLADO
         window.addEventListener('keydown', function(event) {
             switch(event.key) {
                 case 'ArrowUp':
