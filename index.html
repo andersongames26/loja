@@ -1,0 +1,241 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>PS4 Homebrew Store - Estilo OPL</title>
+    <style>
+
+        /* Estilização Visual da Loja (Tema OPL Moderno) */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #050b14;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        /* Máscara escura para o fundo */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            width: 95vw;
+            height: 90vh;
+            display: flex;
+            border: 2px solid #0052cc;
+            background: rgba(10, 20, 40, 0.85);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 82, 204, 0.5);
+        }
+
+        /* LADO ESQUERDO: Lista de Jogos */
+        .lista-jogos {
+            width: 60%;
+            height: 100%;
+            border-right: 2px solid #0052cc;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .titulo-loja {
+            font-size: 24px;
+            color: #0084ff;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid #0052cc;
+            padding-bottom: 10px;
+        }
+
+        .item-jogo {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 5px solid transparent;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s ease;
+        }
+
+            .item-jogo.selecionado {
+                background: rgba(0, 82, 204, 0.3);
+                border-left: 5px solid #0084ff;
+                color: #00ffff;
+                transform: scale(1.02);
+            }
+
+        /* LADO DIREITO: Capa do Jogo */
+        .painel-direito {
+            width: 40%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .moldura-capa {
+            width: 250px;
+            height: 300px;
+            border: 3px solid #0052cc;
+            background: #111;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+            .moldura-capa img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+        .botao-instalar {
+            background: #0052cc;
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0, 82, 204, 0.4);
+        }
+
+            .botao-instalar:hover {
+                background: #0084ff;
+            }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="container">
+        <!-- Esquerda: Lista de Títulos -->
+        <div class="lista-jogos">
+            <div class="titulo-loja">PS4 Homebrew Store</div>
+            <div id="lista"></div>
+        </div>
+        <!-- Direita: Capa Dinâmica e Botão -->
+        <div class="painel-direito">
+            <div class="moldura-capa">
+                <img id="capa-exibida" src="" alt="Selecione um jogo">
+            </div>
+            <button class="botao-instalar" id="btn-instalar">Instalar via PKG</button>
+        </div>
+    </div>
+    <script>// BANCO DE DADOS DA SUA LOJA
+        // ⚠️ O SEGREDO DO VÍDEO: Adicionei um "?" no final do link do PKG.
+        // Isso disfarça a extensão .pkg para o navegador deixar passar, mas o GoldHEN baixa perfeitamente!
+        const meusJogos = [
+            {
+                nome: "Alex Kidd in Miracle World DX",
+                capa: "https://f005.backblazeb2.com/file/PS4COVERS/Alex%20Kidd%20in%20Miracle%20World%20DX.png",
+                fundo: "https://alphacoders.com",
+                pkg: "https://f005.backblazeb2.com/file/andersongames/Alex%20Kidd%20in%20Miracle%20World%20DX_CUSA20239_01.00.pkg" // Deixe a interrogação no final!
+            }
+        ];
+
+        let indexSelecionado = 0;
+
+        function carregarLoja() {
+            const listaDiv = document.getElementById('lista');
+            listaDiv.innerHTML = '';
+
+            meusJogos.forEach((jogo, i) => {
+                const item = document.createElement('div');
+                item.className = `item-jogo ${i === indexSelecionado ? 'selecionado' : ''}`;
+                item.innerText = jogo.nome;
+
+                item.onclick = function() { mudarSelecao(i); };
+                listaDiv.appendChild(item);
+            });
+
+            document.getElementById('capa-exibida').src = meusJogos[indexSelecionado].capa;
+            document.body.style.backgroundImage = "url('" + meusJogos[indexSelecionado].fundo + "')";
+        }
+
+        function mudarSelecao(novoIndex) {
+            indexSelecionado = novoIndex;
+            carregarLoja();
+        }
+
+        function instalarJogo() {
+            const jogo = meusJogos[indexSelecionado];
+
+            // ⚠️ COLOQUE O SEU IP DO PS4 AQUI:
+            const ipPS4 = "192.168.1.2";
+
+            const payload = {
+                type: "direct",
+                packages: [ jogo.pkg ]
+            };
+
+            const jsonTexto = JSON.stringify(payload);
+            alert("🚀 Ativando download de " + jogo.nome + "...");
+
+            // Dispara para as portas internas de escuta do ecossistema do GoldHEN
+            fetch("http://" + ipPS4 + ":12800/api/install", {
+                method: "POST",
+                body: jsonTexto,
+                headers: { "Content-Type": "text/plain" }
+            }).catch(e => {});
+
+            fetch("http://" + ipPS4 + ":9090/api/install", {
+                method: "POST",
+                body: jsonTexto,
+                headers: { "Content-Type": "text/plain" }
+            }).catch(e => {});
+        }
+
+        document.getElementById('btn-instalar').onclick = function() {
+            instalarJogo();
+        };
+
+        // SUPORTE PARA AS SETAS DO CONTROLE
+        window.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case 'ArrowUp':
+                    if (indexSelecionado > 0) mudarSelecao(indexSelecionado - 1);
+                    break;
+                case 'ArrowDown':
+                    if (indexSelecionado < meusJogos.length - 1) mudarSelecao(indexSelecionado + 1);
+                    break;
+                case 'Enter':
+                    instalarJogo();
+                    break;
+            }
+        });
+
+        window.onload = function() {
+            carregarLoja();
+        };</script>
+</body>
+</html>
